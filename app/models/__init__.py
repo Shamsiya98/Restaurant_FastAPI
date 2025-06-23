@@ -5,6 +5,7 @@ from .employees import *
 from .customers import *
 from .orders import *
 from .order_items import *
+from .order_summary import *
 
 
 __all__ = [
@@ -12,7 +13,8 @@ __all__ = [
     "Employee", "EmployeeCreate", "EmployeeRead", "EmployeeUpdate",
     "Customer", "CustomerCreate", "CustomerRead", "CustomerUpdate",
     "Order", "OrderCreate", "OrderRead", "OrderUpdate",
-    "OrderItem", "OrderItemCreate", "MenuItemNested", "OrderItemRead"
+    "OrderItem", "OrderItemCreate", "MenuItemNested", "OrderItemRead",
+    "ItemSummary", "OrderSummary", "PaginatedOrderSummary"
 ]
 
 # Rebuild Pydantic models with forward references

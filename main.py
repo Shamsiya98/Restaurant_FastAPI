@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.routers import menu, employees, customers, orders
+from app.routers import menu, employees, customers, orders, summary
 from app.utils.logger import logger
 
 
@@ -18,3 +18,4 @@ app.include_router(menu.router)
 app.include_router(employees.router)
 app.include_router(customers.router)
 app.include_router(orders.router)
+app.include_router(summary.router)
