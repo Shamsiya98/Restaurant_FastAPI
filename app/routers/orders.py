@@ -8,6 +8,7 @@ from app.models import *
 from app.utils.validators import validate_customer_exists, validate_menu_items_exist
 from app.utils.logger import logger
 
+
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
