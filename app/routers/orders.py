@@ -2,11 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from typing import List
 from sqlmodel import delete
+from fastapi import BackgroundTasks
 
 from app.database import get_session
 from app.models import *
 from app.utils.validators import validate_customer_exists, validate_menu_items_exist
 from app.utils.logger import logger
+from app.tasks.enqueue import enqueue_sync
 
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -16,8 +18,10 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 @router.post("/", response_model=OrderRead)
 def create_order(
         order: OrderCreate,
+        background_tasks: BackgroundTasks,
         session: Session = Depends(get_session)
 ):
+    # BackgroundTasks run small bg tasks after sending response to client, no blocking
     logger.info("POST/order - Creating new order")
 
     try:
@@ -38,6 +42,10 @@ def create_order(
         session.refresh(new_order)
         logger.info(
             f"POST/order - Order {new_order.id} created with {len(order.items)} items")
+
+        # Enqueue background task
+        background_tasks.add_task(enqueue_sync, new_order.id)
+
         return new_order
 
     except Exception as e:

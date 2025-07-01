@@ -1,33 +1,65 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  db:
-    image: postgres:15
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "${POSTGRES_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 10s
-      retries: 5
+    db:
+        image: postgres:15
+        restart: always
+        env_file:
+            - .env
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-U", "postgres" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
-  web:
-    build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - .:/app
-    working_dir: /app
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
+    redis:
+        image: redis:7
+        restart: always
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    web:
+        build: .
+        command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+        volumes:
+            - .:/app
+        working_dir: /app
+        ports:
+            - "8000:8000"
+        env_file:
+            - .env
+        environment:
+            - REDIS_URL=redis://redis:6379
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    arq_worker:
+        build: .
+        command: arq app.tasks.settings.WorkerSettings
+        volumes:
+            - .:/app
+        working_dir: /app
+        env_file:
+            - .env
+        environment:
+            - REDIS_URL=redis://redis:6379
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
 
 volumes:
-  postgres_data:
+    postgres_data:
